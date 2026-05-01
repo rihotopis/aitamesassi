@@ -7,7 +7,7 @@
     memory, CPU, processes, Event Viewer, Windows Update, drivers,
     network, SFC, DISM and more. Outputs a plain-text report.
 .NOTES
-    Target: Acer Nitro 5 (ANV15-52 i7) — Windows 11
+    Target: Acer Nitro 5 (ANV15-52 i7) - Windows 11
     Run as Administrator in PowerShell 5.1+
 #>
 
@@ -58,7 +58,7 @@ if ($bootEvents) {
         $xml = [xml]$ev.ToXml()
         $ms  = ($xml.Event.EventData.Data | Where-Object Name -eq 'BootTime').'#text'
         $sec = if ($ms) { [math]::Round([int64]$ms / 1000, 1) } else { 'N/A' }
-        $buf.AppendLine("  $($ev.TimeCreated)  —  Boot time: $sec s")
+        $buf.AppendLine("  $($ev.TimeCreated)  -  Boot time: $sec s")
         if ($ms -and [int64]$ms -gt 60000) {
             $findings.Add("[BOOT] Boot on $($ev.TimeCreated) took $sec s (> 60 s)")
         }
@@ -81,7 +81,7 @@ Write-Section "2. BOOT PERFORMANCE" $buf.ToString()
 $buf = [System.Text.StringBuilder]::new()
 $startups = Get-CimInstance Win32_StartupCommand
 foreach ($s in $startups) {
-    $buf.AppendLine("  [$($s.Location)] $($s.Name) — $($s.Command)")
+    $buf.AppendLine("  [$($s.Location)] $($s.Name) - $($s.Command)")
 }
 $taskStartups = Get-ScheduledTask | Where-Object { $_.Triggers | Where-Object { $_ -is [CimInstance] -and $_.CimClass.CimClassName -eq 'MSFT_TaskLogonTrigger' } } | Where-Object State -eq 'Ready'
 foreach ($t in $taskStartups) {
@@ -93,7 +93,7 @@ if ($startupCount -gt 15) {
 }
 Write-Section "3. STARTUP PROGRAMS ($startupCount items)" $buf.ToString()
 
-# ── 4. RUNNING PROCESSES — TOP 20 BY CPU + TOP 20 BY MEMORY ─────────────────
+# ── 4. RUNNING PROCESSES - TOP 20 BY CPU + TOP 20 BY MEMORY ─────────────────
 $buf = [System.Text.StringBuilder]::new()
 $procs = Get-Process | Where-Object { $_.ProcessName -ne 'Idle' }
 
@@ -167,7 +167,7 @@ foreach ($pd in $physDisks) {
 }
 Write-Section "7. DISK HEALTH & SPACE" $buf.ToString()
 
-# ── 8. SERVICES — HEAVY & STUCK ─────────────────────────────────────────────
+# ── 8. SERVICES - HEAVY & STUCK ─────────────────────────────────────────────
 $buf = [System.Text.StringBuilder]::new()
 $buf.AppendLine("  --- Non-Microsoft services (Running) ---")
 $svcs = Get-CimInstance Win32_Service | Where-Object { $_.State -eq 'Running' -and $_.PathName -notmatch 'Microsoft|Windows' }
@@ -179,7 +179,7 @@ if ($stoppedAuto) {
     $buf.AppendLine("")
     $buf.AppendLine("  --- Auto-start services NOT running (possible crashes) ---")
     foreach ($s in $stoppedAuto) {
-        $buf.AppendLine("  $($s.Name) — $($s.DisplayName)  [Status: $($s.State)]")
+        $buf.AppendLine("  $($s.Name) - $($s.DisplayName)  [Status: $($s.State)]")
     }
     $findings.Add("[SERVICES] $($stoppedAuto.Count) auto-start service(s) are not running")
 }
@@ -215,7 +215,7 @@ $buf = [System.Text.StringBuilder]::new()
 $problemDevices = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' -and $_.Class -ne $null }
 if ($problemDevices) {
     foreach ($dev in $problemDevices) {
-        $buf.AppendLine("  [$($dev.Status)] $($dev.Class) — $($dev.FriendlyName)")
+        $buf.AppendLine("  [$($dev.Status)] $($dev.Class) - $($dev.FriendlyName)")
     }
     $findings.Add("[DRIVERS] $($problemDevices.Count) device(s) with problems")
 } else {
@@ -223,7 +223,7 @@ if ($problemDevices) {
 }
 Write-Section "10. DRIVER / DEVICE STATUS" $buf.ToString()
 
-# ── 11. EVENT VIEWER — RECENT ERRORS & WARNINGS ─────────────────────────────
+# ── 11. EVENT VIEWER - RECENT ERRORS & WARNINGS ─────────────────────────────
 $buf = [System.Text.StringBuilder]::new()
 $cutoff = (Get-Date).AddDays(-7)
 foreach ($logName in @('System','Application')) {
@@ -293,7 +293,7 @@ $body = @"
   CPU clock   : $throttle MHz / $maxClock MHz max
 "@
 if ($throttle -lt ($maxClock * 0.6)) {
-    $findings.Add("[POWER] CPU running at $throttle / $maxClock MHz — possible thermal throttling")
+    $findings.Add("[POWER] CPU running at $throttle / $maxClock MHz - possible thermal throttling")
 }
 Write-Section "15. POWER PLAN & THERMAL" $body
 
@@ -304,7 +304,7 @@ foreach ($tp in $tempPaths) {
     if (Test-Path $tp) {
         $items = Get-ChildItem $tp -Recurse -Force -ErrorAction SilentlyContinue
         $sizeMB = [math]::Round(($items | Measure-Object Length -Sum).Sum / 1MB, 0)
-        $buf.AppendLine("  $tp  —  $($items.Count) items, $sizeMB MB")
+        $buf.AppendLine("  $tp  -  $($items.Count) items, $sizeMB MB")
         if ($sizeMB -gt 1000) { $findings.Add("[TEMP] $tp contains $sizeMB MB of temp files") }
     }
 }
